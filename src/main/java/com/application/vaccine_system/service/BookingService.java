@@ -2,6 +2,7 @@ package com.application.vaccine_system.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +10,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.application.vaccine_system.dto.BookingDTO;
 import com.application.vaccine_system.model.Booking;
 import com.application.vaccine_system.model.Room;
 import com.application.vaccine_system.model.User;
@@ -16,7 +18,6 @@ import com.application.vaccine_system.model.Booking.BookingStatus;
 import com.application.vaccine_system.model.response.Pagination;
 import com.application.vaccine_system.repository.BookingRepository;
 import com.application.vaccine_system.repository.RoomRepository;
-import com.application.vaccine_system.exception.ResourceNotFoundException;
 import com.application.vaccine_system.exception.InvalidBookingException;
 
 import lombok.RequiredArgsConstructor;
@@ -29,9 +30,13 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
 
-    public Pagination getAllBookings(Specification<Booking> specification, Pageable pageable) {
+    public Pagination<BookingDTO> getAllBookings(Specification<Booking> specification, Pageable pageable) {
         Page<Booking> pageBooking = bookingRepository.findAll(specification, pageable);
-        Pagination pagination = new Pagination();
+        List<BookingDTO> dtos = pageBooking.getContent().stream()
+                .map(BookingDTO::fromEntity)
+                .collect(Collectors.toList());
+
+        Pagination<BookingDTO> pagination = new Pagination<>();
         Pagination.Meta meta = new Pagination.Meta();
 
         meta.setPage(pageable.getPageNumber() + 1);
@@ -40,14 +45,13 @@ public class BookingService {
         meta.setTotal(pageBooking.getTotalElements());
 
         pagination.setMeta(meta);
-        pagination.setResult(pageBooking.getContent());
+        pagination.setResult(dtos);
 
         return pagination;
     }
 
-    public Booking createBooking(User user, Long roomId, LocalDate checkInDate, 
+    public BookingDTO createBooking(User user, Long roomId, LocalDate checkInDate, 
             LocalDate checkOutDate, String phoneNumber, String specialRequests) {
-        
         if (checkInDate.isBefore(LocalDate.now())) {
             throw new InvalidBookingException("Check-in date cannot be in the past");
         }
@@ -56,13 +60,12 @@ public class BookingService {
         }
 
         Room room = roomRepository.findById(roomId)
-            .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
+            .orElseThrow(() -> new InvalidBookingException("Room not found"));
 
         if (!room.isAvailable()) {
             throw new InvalidBookingException("Room is not available for booking");
         }
 
-        // Check if room is already booked for the given dates
         if (isRoomBooked(roomId, checkInDate, checkOutDate)) {
             throw new InvalidBookingException("Room is already booked for these dates");
         }
@@ -77,26 +80,31 @@ public class BookingService {
                 .status(BookingStatus.PENDING)
                 .build();
 
-        return bookingRepository.save(booking);
+        return BookingDTO.fromEntity(bookingRepository.save(booking));
     }
 
-    public List<Booking> getUserBookings(Long userId) {
-        return bookingRepository.findByUserId(userId);
+    public List<BookingDTO> getUserBookings(Long userId) {
+        return bookingRepository.findByUserId(userId).stream()
+                .map(BookingDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
-    public Booking getBooking(Long bookingId) {
-        return bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+    public BookingDTO getBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new InvalidBookingException("Booking not found"));
+        return BookingDTO.fromEntity(booking);
     }
 
-    public Booking updateBookingStatus(Long bookingId, BookingStatus status) {
-        Booking booking = getBooking(bookingId);
+    public BookingDTO updateBookingStatus(Long bookingId, BookingStatus status) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new InvalidBookingException("Booking not found"));
         booking.setStatus(status);
-        return bookingRepository.save(booking);
+        return BookingDTO.fromEntity(bookingRepository.save(booking));
     }
 
     public void cancelBooking(Long bookingId) {
-        Booking booking = getBooking(bookingId);
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new InvalidBookingException("Booking not found"));
         if (booking.getStatus() == BookingStatus.COMPLETED) {
             throw new InvalidBookingException("Cannot cancel a completed booking");
         }

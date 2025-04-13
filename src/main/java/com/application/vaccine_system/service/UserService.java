@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.application.vaccine_system.exception.InvalidException;
-import com.application.vaccine_system.exception.ResourceNotFoundException;
 
 import com.application.vaccine_system.model.User;
 import com.application.vaccine_system.model.User.UserRole;
@@ -118,8 +117,8 @@ public class UserService {
         return reqRegister;
     }
 
-    public User getUser(Long userId) {
+    public User getUser(Long userId) throws InvalidException {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+                .orElseThrow(() -> new InvalidException("User not found"));
     }
 }

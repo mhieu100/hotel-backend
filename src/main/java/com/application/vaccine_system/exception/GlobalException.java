@@ -22,6 +22,7 @@ public class GlobalException {
             UsernameNotFoundException.class,
             BadCredentialsException.class,
             InvalidException.class,
+            InvalidBookingException.class
     })
     public ResponseEntity<Response<Object>> handleException(Exception ex) {
         Response<Object> res = new Response<>();

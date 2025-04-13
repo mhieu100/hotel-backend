@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.application.vaccine_system.dto.BookingDTO;
+import com.application.vaccine_system.exception.InvalidException;
 import com.application.vaccine_system.model.Booking;
 import com.application.vaccine_system.model.Booking.BookingStatus;
 import com.application.vaccine_system.model.response.Pagination;
@@ -28,7 +30,7 @@ public class BookingController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<Pagination> getAllBookings(
+    public ResponseEntity<Pagination<BookingDTO>> getAllBookings(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) BookingStatus status,
@@ -54,13 +56,13 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<Booking> createBooking(
+    public ResponseEntity<BookingDTO> createBooking(
             @RequestParam Long userId,
             @RequestParam Long roomId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOutDate,
             @RequestParam String phoneNumber,
-            @RequestParam(required = false) String specialRequests) {
+            @RequestParam(required = false) String specialRequests) throws InvalidException {
         
         var user = userService.getUser(userId);
         var booking = bookingService.createBooking(user, roomId, checkInDate, checkOutDate, phoneNumber, specialRequests);
@@ -68,19 +70,19 @@ public class BookingController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Booking>> getUserBookings(@PathVariable Long userId) {
+    public ResponseEntity<List<BookingDTO>> getUserBookings(@PathVariable Long userId) {
         var bookings = bookingService.getUserBookings(userId);
         return ResponseEntity.ok(bookings);
     }
 
     @GetMapping("/{bookingId}")
-    public ResponseEntity<Booking> getBooking(@PathVariable Long bookingId) {
+    public ResponseEntity<BookingDTO> getBooking(@PathVariable Long bookingId) {
         var booking = bookingService.getBooking(bookingId);
         return ResponseEntity.ok(booking);
     }
 
     @PutMapping("/{bookingId}/status")
-    public ResponseEntity<Booking> updateBookingStatus(
+    public ResponseEntity<BookingDTO> updateBookingStatus(
             @PathVariable Long bookingId,
             @RequestParam BookingStatus status) {
         var updatedBooking = bookingService.updateBookingStatus(bookingId, status);
