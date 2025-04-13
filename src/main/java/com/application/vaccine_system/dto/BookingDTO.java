@@ -14,6 +14,7 @@ public class BookingDTO {
     private String userName;
     private Long roomId;
     private String roomNumber;
+    private String roomImageUrl;
     private String phoneNumber;
     private LocalDate checkInDate;
     private LocalDate checkOutDate;
@@ -27,6 +28,7 @@ public class BookingDTO {
         dto.setUserName(booking.getUser().getFullname());
         dto.setRoomId(booking.getRoom().getId());
         dto.setRoomNumber(booking.getRoom().getRoomNumber());
+        dto.setRoomImageUrl(booking.getRoom().getImageUrl());
         dto.setPhoneNumber(booking.getPhoneNumber());
         dto.setCheckInDate(booking.getCheckInDate());
         dto.setCheckOutDate(booking.getCheckOutDate());

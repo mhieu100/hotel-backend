@@ -2,7 +2,6 @@ package com.application.vaccine_system.model;
 
 import java.util.List;
 
-
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -29,19 +28,21 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Room {
-    public Room( String roomNumber, RoomType type, double pricePerNight, int maxOccupancy,
-            List<RoomFeature> features, boolean isAvailable) {
+    public Room(String roomNumber, RoomType type, double pricePerNight, int maxOccupancy,
+            List<RoomFeature> features, boolean isAvailable, String imageUrl) {
         this.roomNumber = roomNumber;
         this.type = type;
         this.pricePerNight = pricePerNight;
         this.maxOccupancy = maxOccupancy;
         this.features = features;
         this.isAvailable = isAvailable;
+        this.imageUrl = imageUrl;
     }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
     @Column(nullable = false, unique = true)
     private String roomNumber;
     
@@ -62,12 +63,17 @@ public class Room {
     
     @Column(nullable = false)
     private boolean isAvailable;
+
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
     
     public enum RoomType {
         SINGLE, DOUBLE, SUITE, DELUXE, PRESIDENTIAL
     }
+    
     public enum RoomFeature {
         WIFI, TV, AIR_CONDITIONING, MINIBAR, SEA_VIEW, BALCONY
     }
-    boolean isDeleted;
+    
+    private boolean isDeleted;
 }

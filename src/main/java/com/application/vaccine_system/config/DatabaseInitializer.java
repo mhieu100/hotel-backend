@@ -9,7 +9,7 @@ import com.application.vaccine_system.model.User;
 import com.application.vaccine_system.model.User.UserRole;
 import com.application.vaccine_system.repository.RoomRepository;
 import com.application.vaccine_system.repository.UserRepository;
-import com.application.vaccine_system.util.RoomDataGenerator;
+// import com.application.vaccine_system.util.RoomDataGenerator;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,7 +25,7 @@ public class DatabaseInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         System.out.println(">>> START INIT DATABASE");
         long countUsers = this.userRepository.count();
-        long countRooms = this.roomRepository.count();
+        // long countRooms = this.roomRepository.count();
         if (countUsers == 0) {
             User adminUser = new User();
             adminUser.setEmail("admin@gmail.com");
@@ -36,8 +36,8 @@ public class DatabaseInitializer implements CommandLineRunner {
             adminUser.setRole(UserRole.ADMIN);
             this.userRepository.save(adminUser);  
         }
-        if (countRooms == 0) {
-            roomRepository.saveAll(RoomDataGenerator.generateSampleRooms());
-        }
+        // if (countRooms == 0) {
+        //     roomRepository.saveAll(RoomDataGenerator.generateSampleRooms());
+        // }
     }
 }

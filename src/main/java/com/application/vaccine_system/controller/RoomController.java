@@ -1,20 +1,18 @@
 package com.application.vaccine_system.controller;
 
+import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.application.vaccine_system.annotation.ApiMessage;
+import com.application.vaccine_system.dto.request.CheckRoomAvailabilityRequest;
+import com.application.vaccine_system.dto.response.AvailableRoomResponse;
 import com.application.vaccine_system.exception.InvalidException;
 import com.application.vaccine_system.model.Room;
 import com.application.vaccine_system.model.response.Pagination;
@@ -23,8 +21,6 @@ import com.turkraft.springfilter.boot.Filter;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-
-
 
 @RestController
 @RequestMapping("/rooms")
@@ -65,5 +61,29 @@ public class RoomController {
     public void deleteVaccine(@PathVariable Long id) throws InvalidException {
         roomService.deleteRoom(id);
     }
-    
+
+    @GetMapping("/check-availability")
+    public ResponseEntity<List<AvailableRoomResponse>> checkAvailability(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOutDate,
+            @RequestParam Room.RoomType roomType,
+            @RequestParam int numberOfGuests) throws InvalidException {
+        
+        var availableRooms = roomService.checkAvailableRooms(
+            checkInDate, checkOutDate, roomType, numberOfGuests);
+        return ResponseEntity.ok(availableRooms);
+    }
+
+    // Alternative endpoint using request body
+    @PostMapping("/check-availability")
+    public ResponseEntity<List<AvailableRoomResponse>> checkAvailabilityPost(
+            @Valid @RequestBody CheckRoomAvailabilityRequest request) throws InvalidException {
+        
+        var availableRooms = roomService.checkAvailableRooms(
+            request.getCheckInDate(),
+            request.getCheckOutDate(),
+            request.getRoomType(),
+            request.getNumberOfGuests());
+        return ResponseEntity.ok(availableRooms);
+    }
 }

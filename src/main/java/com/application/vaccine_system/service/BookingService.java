@@ -62,6 +62,8 @@ public class BookingService {
         Room room = roomRepository.findById(roomId)
             .orElseThrow(() -> new InvalidBookingException("Room not found"));
 
+       
+
         if (!room.isAvailable()) {
             throw new InvalidBookingException("Room is not available for booking");
         }
@@ -69,6 +71,7 @@ public class BookingService {
         if (isRoomBooked(roomId, checkInDate, checkOutDate)) {
             throw new InvalidBookingException("Room is already booked for these dates");
         }
+
 
         Booking booking = Booking.builder()
                 .user(user)
@@ -79,7 +82,8 @@ public class BookingService {
                 .specialRequests(specialRequests)
                 .status(BookingStatus.PENDING)
                 .build();
-
+                room.setAvailable(false);
+                roomRepository.save(room);
         return BookingDTO.fromEntity(bookingRepository.save(booking));
     }
 
@@ -99,6 +103,11 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new InvalidBookingException("Booking not found"));
         booking.setStatus(status);
+        if (status == BookingStatus.COMPLETED) {
+            Room room = booking.getRoom();
+            room.setAvailable(true);
+            roomRepository.save(room);
+        }
         return BookingDTO.fromEntity(bookingRepository.save(booking));
     }
 
@@ -109,6 +118,9 @@ public class BookingService {
             throw new InvalidBookingException("Cannot cancel a completed booking");
         }
         booking.setStatus(BookingStatus.CANCELLED);
+        Room room = booking.getRoom();
+        room.setAvailable(true);
+        roomRepository.save(room);
         bookingRepository.save(booking);
     }
 
